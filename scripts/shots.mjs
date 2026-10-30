@@ -6,7 +6,7 @@ import { chromium } from '@playwright/test';
 const [out = 'shots', w = '390', h = '844'] = process.argv.slice(2);
 const width = Number(w);
 const height = Number(h);
-const base = 'http://localhost:4173/robot_buddy/?fast';
+const base = 'http://localhost:4173/robot_buddy/?fast' + (process.env.LANG_Q ?? '');
 
 const browser = await chromium.launch();
 const ctx = await browser.newContext({

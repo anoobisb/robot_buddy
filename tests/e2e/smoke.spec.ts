@@ -190,6 +190,21 @@ test.describe('smoke', () => {
     await playSafety(page, info);
   });
 
+  test('Arabic switches to right-to-left and still fits', async ({ page }, info) => {
+    await page.goto('./?fast&lang=ar');
+    await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
+    await expect(page.locator('html')).toHaveAttribute('lang', 'ar');
+    await press(page, '.start-btn', info);
+    await expect(page.locator('.caption')).toContainText('بولت');
+    await checkLayout(page);
+    for (const level of ['teach', 'program', 'safety']) {
+      await press(page, `[data-level=${level}]`, info);
+      await expect(page.locator('.caption')).not.toBeEmpty();
+      await checkLayout(page);
+      await press(page, '.bar-home', info);
+    }
+  });
+
   test('grown-up gate needs a 3 second hold and a sum', async ({ page }, info) => {
     await start(page, info);
     await press(page, '.bar-gear', info);

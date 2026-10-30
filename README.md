@@ -35,8 +35,8 @@ npm i
 npm run dev          # http://localhost:5173/robot_buddy/
 ```
 
-Add `?fast` to the URL to shorten all delays (used by the tests), or `?lang=xx` to pick a
-language (`en` is shipped; unknown languages fall back to English).
+Add `?fast` to the URL to shorten all delays (used by the tests), or `?lang=ar` for Arabic with a
+right-to-left layout (`en` is the default; unknown languages fall back to English).
 
 ## Test and build
 

@@ -714,6 +714,12 @@ body {
   display: contents;
 }
 
+/* The board and the arrow palette show screen directions, so they never mirror in RTL. */
+.board,
+.palette {
+  direction: ltr;
+}
+
 .board {
   --n: 4;
   --side: min(100cqw, calc(100cqh - 18px));
