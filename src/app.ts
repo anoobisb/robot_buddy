@@ -7,6 +7,7 @@ export type Route =
   | { name: 'teach' }
   | { name: 'program'; puzzle?: number }
   | { name: 'safety' }
+  | { name: 'color'; page?: number }
   | { name: 'sticker'; level: LevelId; again: Route; next: Route }
   | { name: 'gate' }
   | { name: 'corner' };

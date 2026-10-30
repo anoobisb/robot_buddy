@@ -1,8 +1,9 @@
 import './styles.css';
 import type { App, Route } from './app';
-import { initAudio } from './core/audio';
+import { hush, initAudio } from './core/audio';
 import { resolveLang, setLang } from './core/i18n';
 import { createScope, type Scope } from './core/scope';
+import { colorScreen } from './levels/color/scene';
 import { programScreen } from './levels/program/scene';
 import { safetyScreen } from './levels/safety/scene';
 import { teachScreen } from './levels/teach/scene';
@@ -42,6 +43,8 @@ function screenFor(route: Route) {
       return programScreen(route.puzzle);
     case 'safety':
       return safetyScreen;
+    case 'color':
+      return colorScreen(route.page);
     case 'sticker':
       return stickerScreen(route.level, route.again, route.next);
     case 'gate':
@@ -54,6 +57,7 @@ function screenFor(route: Route) {
 const app: App = {
   go(route) {
     scope.dispose();
+    hush(true);
     scope = createScope();
     root.dataset.route = route.name;
     screenFor(route)(root, app, scope);

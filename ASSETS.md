@@ -5,6 +5,7 @@ All assets are generated for this project. There are no image, audio or font fil
 | Asset                                            | Source                                                                                         | Licence        |
 | ------------------------------------------------ | ---------------------------------------------------------------------------------------------- | -------------- |
 | Bolt mascot (`src/ui/bolt.ts`)                   | Original inline SVG, hand-written for this project                                             | Original work  |
+| Coloring pages (`src/levels/color/pages.ts`)     | Original inline SVG line art, hand-written for this project                                    | Original work  |
 | App icons (`public/favicon.svg`, `public/*.png`) | Original SVG; PNGs rendered from it by `scripts/gen-icons.mjs`                                 | Original work  |
 | Sound effects (`src/core/audio.ts`)              | Synthesised at runtime with the Web Audio API (oscillators); no audio files                    | Original work  |
 | Voice                                            | The device's own `speechSynthesis` voices; nothing is bundled or downloaded                    | Device/OS      |

@@ -1,6 +1,7 @@
 // Tracks timers and listeners for one screen so leaving it cleans everything up.
 // `?fast` shortens every delay; the Playwright tests use it.
-const speed = typeof location !== 'undefined' && /[?&]fast\b/.test(location.search) ? 0.05 : 1;
+export const speed =
+  typeof location !== 'undefined' && /[?&]fast\b/.test(location.search) ? 0.05 : 1;
 
 export interface Scope {
   wait(ms: number, fn: () => void): void;
@@ -15,8 +16,10 @@ export interface Scope {
 
 export function createScope(): Scope {
   const disposers: (() => void)[] = [];
+  let disposed = false;
   return {
     wait(ms, fn) {
+      if (disposed) return;
       const id = setTimeout(fn, ms * speed);
       disposers.push(() => clearTimeout(id));
     },
@@ -29,6 +32,7 @@ export function createScope(): Scope {
       disposers.push(d);
     },
     dispose() {
+      disposed = true;
       while (disposers.length) disposers.pop()?.();
     },
   };

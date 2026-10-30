@@ -1,5 +1,5 @@
 import type { Screen } from '../../app';
-import { say, sfx } from '../../core/audio';
+import { narrate, say, sfx, type Line } from '../../core/audio';
 import { createDnd } from '../../core/drag';
 import { t } from '../../core/i18n';
 import { getProgress, updateProgress } from '../../core/progress';
@@ -74,7 +74,7 @@ export function programScreen(startAt?: number): Screen {
       const i = at ?? slots.findIndex((s, n) => s === null && n < slotCount);
       if (i < 0 || i >= slotCount) {
         sfx('oops');
-        say(t('l2.full'));
+        narrate([{ text: t('l2.full'), point: runBtn }], false);
         return;
       }
       sfx('tap');
@@ -190,7 +190,7 @@ export function programScreen(startAt?: number): Screen {
       const slotOf = from.map((k) => map[k]!);
       if (!program.length) {
         sfx('oops');
-        say(t('l2.empty'), true);
+        narrate([{ text: t('l2.empty'), point: palette }]);
         return;
       }
       running = true;
@@ -236,7 +236,7 @@ export function programScreen(startAt?: number): Screen {
           }
           index = next;
           load();
-          say(introFor(index, t('l2.next')), true);
+          narrate(introFor(index, false));
         });
         return;
       }
@@ -248,7 +248,15 @@ export function programScreen(startAt?: number): Screen {
           ? slotOf[failed ?? 0]
           : slots.findIndex((s, i) => s === null && i < slotCount && i > (map.at(-1) ?? -1));
       if (bugSlot !== undefined && bugSlot >= 0) slotEls[bugSlot]?.classList.add('is-bug');
-      say(result === 'hit_wall' ? t('l2.bug') : t('l2.more'), true);
+      const bugEl = bugSlot !== undefined && bugSlot >= 0 ? slotEls[bugSlot] : null;
+      narrate(
+        result === 'hit_wall'
+          ? [
+              { text: t('l2.bug'), point: bugEl },
+              { text: t('l2.bugTap'), point: [bugEl, palette] },
+            ]
+          : [{ text: t('l2.more'), point: bugEl ?? palette }],
+      );
       scope.wait(1800, () => {
         bolt.set('idle');
         place(PUZZLES[index]!.start);
@@ -256,13 +264,32 @@ export function programScreen(startAt?: number): Screen {
       });
     }
 
-    function introFor(i: number, fallback: string): string {
+    /** What Bolt says (and points at) when a puzzle starts. */
+    function introFor(i: number, first: boolean): Line[] {
       const p = PUZZLES[i]!;
-      if (p.kind === 'fix') return t('l2.fixIntro');
-      return p.repeat ? t('l2.repeatIntro') : fallback;
+      const goal = board.querySelector('.cell-goal');
+      if (p.kind === 'fix') {
+        return [
+          { text: t('l2.fixBug'), point: row },
+          { text: t('l2.fixPlay'), point: runBtn },
+        ];
+      }
+      if (p.repeat) {
+        return [
+          { text: t('l2.loopTile'), point: tiles.get('repeat') },
+          { text: t('l2.loopDoes'), point: row },
+          { text: t('l2.loopFive'), point: goal },
+        ];
+      }
+      if (!first) return [{ text: t('l2.next'), point: goal }];
+      return [
+        { text: t('l2.introGoal'), point: goal },
+        { text: t('l2.introArrows'), point: palette },
+        { text: t('l2.introPlay'), point: runBtn },
+      ];
     }
 
     load();
-    say(introFor(index, t('l2.intro')), true);
+    narrate(introFor(index, true));
   };
 }

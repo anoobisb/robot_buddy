@@ -315,7 +315,7 @@ body {
 .hub-levels {
   grid-area: levels;
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--gap);
 }
 
@@ -339,6 +339,10 @@ body {
 
 .hub-level-safety {
   background: #d3e8fd;
+}
+
+.hub-level-color {
+  background: #f3d9fa;
 }
 
 .hub-num {
@@ -366,37 +370,19 @@ body {
   .hub {
     grid-template:
       'bar bar' auto
-      'hero levels' minmax(0, 1fr) / minmax(0, 1fr) minmax(0, 1.1fr);
+      'hero levels' minmax(0, 1fr) / minmax(0, 1fr) minmax(0, 1.3fr);
   }
 
   .hub-levels {
-    grid-template-columns: minmax(0, 1fr);
     grid-auto-rows: minmax(0, 1fr);
   }
 
   .hub-level {
     min-height: var(--tap);
-    flex-direction: row;
-    justify-content: flex-start;
-    gap: var(--gap);
-    padding-inline: calc(var(--gap) * 2 + 1.6em);
   }
 
   .hub-level .btn-icon {
-    font-size: clamp(36px, 8vmin, 72px);
-  }
-
-  .hub-level .btn-label {
-    text-align: start;
-  }
-
-  .hub-stars {
-    margin-inline-start: auto;
-  }
-
-  .hub-num {
-    top: 50%;
-    translate: 0 -50%;
+    font-size: clamp(32px, 9vmin, 80px);
   }
 }
 
@@ -521,7 +507,7 @@ body {
   justify-content: flex-start;
   padding: 8px;
   min-height: var(--tap);
-  overflow: hidden;
+  overflow: visible;
 }
 
 .bin-yes {
@@ -1038,6 +1024,19 @@ body {
   box-shadow: var(--shadow);
 }
 
+.grownup-sign {
+  width: clamp(130px, 34vmin, 300px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: #fff;
+  border: 6px solid var(--yes);
+  box-shadow: var(--shadow);
+  font-size: clamp(70px, 20vmin, 180px);
+  line-height: 1;
+}
+
 .choices {
   grid-area: choices;
   display: flex;
@@ -1088,6 +1087,148 @@ body {
 
   .choices {
     align-items: center;
+  }
+}
+
+/* ---- Level 4: color ---------------------------------------------------------------- */
+
+.color {
+  grid-template:
+    'bar' auto
+    'stage' minmax(0, 1fr)
+    'say' auto
+    'palette' auto / minmax(0, 1fr);
+}
+
+.color-stage {
+  grid-area: stage;
+  container-type: size;
+  min-height: 0;
+  display: grid;
+  place-items: center;
+}
+
+.color-page {
+  --side: min(100cqw, 100cqh);
+  width: var(--side);
+  height: var(--side);
+  background: #fff;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  touch-action: none;
+}
+
+.color-page svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.color-page .region {
+  stroke: var(--ink);
+  stroke-width: 4;
+  stroke-linejoin: round;
+  cursor: pointer;
+  transition: fill 0.15s;
+}
+
+.color-page .region:focus-visible {
+  outline: none;
+  stroke: var(--pink);
+  stroke-width: 7;
+}
+
+.color-page .line {
+  stroke: var(--ink);
+  stroke-width: 5;
+  stroke-linecap: round;
+  fill: none;
+  pointer-events: none;
+}
+
+.color-page .region.just-filled {
+  animation: fill-pop 0.25s ease-out;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.swatches {
+  grid-area: palette;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+}
+
+.swatch {
+  position: relative;
+  width: var(--tap);
+  height: var(--tap);
+  border-radius: 50%;
+  background: var(--swatch);
+  border: 4px solid rgb(29 53 87 / 0.25);
+}
+
+.swatch-mark {
+  font-size: calc(var(--tap) * 0.45);
+}
+
+/* Selected: thick ring, a lift and a tick, not just colour. */
+.swatch.is-on {
+  border: 6px solid var(--ink);
+  translate: 0 -4px;
+}
+
+.swatch.is-on::before {
+  content: '✔';
+  position: absolute;
+  top: -6px;
+  inset-inline-end: -6px;
+  width: 1.5em;
+  height: 1.5em;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--ink);
+  color: #fff;
+  font-size: clamp(12px, 2vmin, 18px);
+  font-weight: 900;
+}
+
+.color-magic {
+  width: var(--tap);
+  height: var(--tap);
+  background: #fff3c4;
+}
+
+.color-next {
+  width: var(--tap);
+  height: var(--tap);
+  background: #d6f5c9;
+}
+
+@media (orientation: landscape) {
+  .color {
+    --page: min(calc(100vh - var(--pad-t) - var(--pad-b)), 56vw);
+    --page: min(calc(100dvh - var(--pad-t) - var(--pad-b)), 56vw);
+    grid-template:
+      'stage bar' auto
+      'stage say' minmax(0, 1fr)
+      'stage palette' auto / var(--page) minmax(0, 1fr);
+  }
+
+  .color .caption {
+    align-self: start;
+  }
+
+  .swatches {
+    align-content: end;
+  }
+}
+
+@keyframes fill-pop {
+  50% {
+    transform: scale(1.06);
   }
 }
 
@@ -1347,6 +1488,34 @@ body {
   }
 }
 
+/* Bolt points at what it is talking about, so pre-readers know which button a
+   spoken line means. Set by narrate() in core/audio.ts. */
+.is-pointed {
+  position: relative;
+  z-index: 2;
+  box-shadow:
+    0 0 0 6px var(--gold),
+    0 0 18px 8px rgb(255 183 3 / 0.55) !important;
+}
+
+.is-pointed::after {
+  content: '👆';
+  position: absolute;
+  right: -0.15em;
+  bottom: -0.45em;
+  font-size: clamp(28px, 6vmin, 54px);
+  line-height: 1;
+  pointer-events: none;
+  z-index: 3;
+  animation: finger 0.6s ease-in-out infinite alternate;
+}
+
+@keyframes finger {
+  to {
+    transform: translate(-6px, -8px);
+  }
+}
+
 @keyframes fade {
   from {
     opacity: 0.3;
@@ -1355,6 +1524,10 @@ body {
 
 /* Reduced motion: no bouncing, wobbling or spinning. Fades only. */
 @media (prefers-reduced-motion: reduce) {
+  .is-pointed::after {
+    animation: none !important;
+  }
+
   .bolt *,
   .start-btn,
   .cell-goal,
@@ -1362,6 +1535,7 @@ body {
     animation: none !important;
   }
 
+  .color-page .region.just-filled,
   .caption.pop,
   .bin.gulp,
   .wobble,

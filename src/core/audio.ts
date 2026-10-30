@@ -1,5 +1,6 @@
 import { getSettings, saveSettings, type Settings } from './progress';
 import { speechLang } from './i18n';
+import { speed } from './scope';
 
 // Synthesised sound effects (Web Audio) plus a speechSynthesis wrapper.
 // Nothing here may throw: audio is a bonus, never a requirement.
@@ -8,7 +9,12 @@ export type Sfx = 'tap' | 'pick' | 'drop' | 'chime' | 'oops' | 'step' | 'bump' |
 
 let ctx: AudioContext | null = null;
 let settings: Settings = getSettings();
-let lastInstruction = '';
+let lastInstruction: Line[] = [];
+let lastDone: (() => void) | undefined;
+/** Bumped by every new line or narration, so stale ones stop. */
+let generation = 0;
+let pointed: HTMLElement[] = [];
+let narrationTimer: ReturnType<typeof setTimeout> | undefined;
 let voices: SpeechSynthesisVoice[] = [];
 const captionListeners = new Set<(text: string) => void>();
 const muteListeners = new Set<(muted: boolean) => void>();
@@ -173,32 +179,104 @@ export function availableVoices(): SpeechSynthesisVoice[] {
   return voices.filter((v) => v.lang.toLowerCase().startsWith(base));
 }
 
-function speak(text: string): void {
+/** One spoken line. While it plays, `point` glows with a bouncing finger. */
+export interface Line {
+  text: string;
+  point?: Element | null | (Element | null | undefined)[];
+}
+
+function utter(text: string, onDone?: () => void): void {
   const s = synth();
   if (!s || settings.muted) return;
   try {
-    s.cancel();
     const u = new SpeechSynthesisUtterance(text);
     u.rate = settings.rate;
     u.pitch = 1.15;
     u.lang = speechLang();
     const v = pickVoice(voices, u.lang, settings.voiceURI);
     if (v) u.voice = v;
+    if (onDone) {
+      u.onend = onDone;
+      u.onerror = onDone;
+    }
     s.speak(u);
   } catch {
-    // ignore
+    onDone?.();
   }
 }
 
-/** Speaks a line and shows it as a caption. Instructions can be replayed. */
+function clearPointing(): void {
+  pointed.forEach((el) => el.classList.remove('is-pointed'));
+  pointed = [];
+}
+
+function pointAt(target: Line['point']): void {
+  clearPointing();
+  const list = Array.isArray(target) ? target : [target];
+  pointed = list.filter((el): el is HTMLElement => el instanceof HTMLElement);
+  pointed.forEach((el) => el.classList.add('is-pointed'));
+}
+
+/** Rough time a line takes to say, used when speech is off or its events never fire. */
+const estimate = (text: string) => ((text.length * 75) / settings.rate + 900) * speed;
+
+/**
+ * Says lines one after another for children who can't read: each line shows as
+ * the caption, and whatever it talks about glows with a 👆 while it is spoken.
+ * Instructions (the default) can be replayed with the speaker button. `onDone` runs
+ * after the last line, unless another line interrupts first.
+ */
+export function narrate(lines: Line[], instruction = true, onDone?: () => void): void {
+  if (!lines.length) return;
+  if (instruction) {
+    lastInstruction = lines;
+    lastDone = onDone;
+  }
+  hush();
+  const gen = generation;
+  const step = (i: number) => {
+    if (gen !== generation) return;
+    const line = lines[i];
+    if (!line) {
+      narrationTimer = setTimeout(() => gen === generation && clearPointing(), 900 * speed);
+      onDone?.();
+      return;
+    }
+    pointAt(line.point);
+    captionListeners.forEach((fn) => fn(line.text));
+    let advanced = false;
+    const next = () => {
+      if (advanced) return;
+      advanced = true;
+      clearTimeout(narrationTimer);
+      step(i + 1);
+    };
+    // Speech end moves on; the timer is a safety net (and the pace when muted).
+    narrationTimer = setTimeout(next, estimate(line.text) * (synth() && !settings.muted ? 1.6 : 1));
+    utter(line.text, speed < 1 ? undefined : next);
+  };
+  step(0);
+}
+
+/** Speaks a single line and shows it as a caption. */
 export function say(text: string, instruction = false): void {
-  if (instruction) lastInstruction = text;
-  captionListeners.forEach((fn) => fn(text));
-  speak(text);
+  narrate([{ text }], instruction);
 }
 
 export function replay(): void {
-  if (lastInstruction) say(lastInstruction);
+  if (lastInstruction.length) narrate(lastInstruction, true, lastDone);
+}
+
+/** Stops any speech or narration and clears pointing. `forget` also drops the replayable instruction. */
+export function hush(forget = false): void {
+  if (forget) {
+    lastInstruction = [];
+    lastDone = undefined;
+  }
+  generation++;
+  clearTimeout(narrationTimer);
+  clearPointing();
+  stopSpeech();
 }
 
 export function stopSpeech(): void {

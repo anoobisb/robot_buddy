@@ -1,5 +1,5 @@
 import type { Route, Screen } from '../app';
-import { say, sfx } from '../core/audio';
+import { narrate, sfx } from '../core/audio';
 import { t } from '../core/i18n';
 import type { LevelId } from '../core/progress';
 import { createBolt } from './bolt';
@@ -10,6 +10,7 @@ export const STICKER_ICON: Record<LevelId, string> = {
   teach: '🧠',
   program: '🔋',
   safety: '🛡️',
+  color: '🎨',
 };
 
 export function stickerScreen(level: LevelId, again: Route, next: Route): Screen {
@@ -44,6 +45,10 @@ export function stickerScreen(level: LevelId, again: Route, next: Route): Screen
       h('div', { class: 'sticker-actions' }, againBtn, nextBtn),
     );
     sfx('sticker');
-    say(t('sticker.got'), true);
+    narrate([
+      { text: t('sticker.got'), point: badge },
+      { text: t('sticker.againSay'), point: againBtn },
+      { text: t('sticker.nextSay'), point: nextBtn },
+    ]);
   };
 }

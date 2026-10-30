@@ -1,5 +1,5 @@
 import type { Screen } from '../app';
-import { say, unlock } from '../core/audio';
+import { unlock } from '../core/audio';
 import { t } from '../core/i18n';
 import { createBolt } from './bolt';
 import { h } from './dom';
@@ -18,7 +18,6 @@ export const startScreen: Screen = (root, app, scope) => {
   scope.on(go, 'click', () => {
     // Inside the gesture: iOS unlocks Web Audio and speech only here.
     unlock();
-    say(t('start.hello'));
     app.go({ name: 'hub' });
   });
   go.focus();

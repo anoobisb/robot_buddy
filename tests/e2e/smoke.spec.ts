@@ -93,7 +93,8 @@ async function playSafety(page: Page, info: TestInfo): Promise<void> {
     await expect(page.locator('.dot').nth(i)).toHaveClass(/is-now/);
     await expect(page.locator('.choice')).toHaveCount(2);
     await press(page, '.choice:not([data-correct])', info);
-    await expect(page.locator('.caption')).toContainText('think again');
+    // A wrong answer just wobbles and Bolt asks again; no penalty.
+    await expect(page.locator('.choice:not([data-correct])')).toHaveClass(/wobble/);
     await press(page, '.choice[data-correct]', info);
     await expect(page.locator('.choice.is-right')).toHaveCount(1);
   }
@@ -116,7 +117,9 @@ test.describe('smoke', () => {
     await checkLayout(page);
     await start(page, info);
     await checkLayout(page);
-    await expect(page.locator('.hub-level')).toHaveCount(3);
+    await expect(page.locator('.hub-level')).toHaveCount(4);
+    // Bolt points at each game while saying what it is.
+    await expect(page.locator('.hub-level.is-pointed')).toHaveCount(1);
     await expect(page.locator('a[href]')).toHaveCount(0);
   });
 
@@ -195,14 +198,41 @@ test.describe('smoke', () => {
     await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
     await expect(page.locator('html')).toHaveAttribute('lang', 'ar');
     await press(page, '.start-btn', info);
-    await expect(page.locator('.caption')).toContainText('بولت');
+    await expect(page.locator('.caption')).not.toBeEmpty();
     await checkLayout(page);
-    for (const level of ['teach', 'program', 'safety']) {
+    for (const level of ['teach', 'program', 'safety', 'color']) {
       await press(page, `[data-level=${level}]`, info);
       await expect(page.locator('.caption')).not.toBeEmpty();
       await checkLayout(page);
       await press(page, '.bar-home', info);
     }
+  });
+
+  test('Level 4: color with taps, Bolt finishes with your colors, sticker', async ({
+    page,
+  }, info) => {
+    await start(page, info);
+    await press(page, '[data-level=color]', info);
+    await expect(page.locator('.color-page .region').first()).toBeVisible();
+    await checkLayout(page);
+    // Bolt can't help before it has seen any examples.
+    await press(page, '.color-magic', info);
+    await expect(page.locator('.color-page .region[fill="#ffffff"]')).not.toHaveCount(0);
+    await press(page, '[data-swatch=blue]', info);
+    await expect(page.locator('[data-swatch=blue]')).toHaveAttribute('aria-pressed', 'true');
+    await press(page, '[data-r=antenna]', info);
+    await expect(page.locator('[data-r=antenna]')).toHaveAttribute('fill', '#4895ef');
+    await press(page, '[data-swatch=yellow]', info);
+    await press(page, '[data-r=footL]', info);
+    await expect(page.locator('[data-r=footL]')).toHaveAttribute('fill', '#ffd60a');
+    await rotate(page);
+    await checkLayout(page);
+    await expect(page.locator('[data-r=antenna]')).toHaveAttribute('fill', '#4895ef');
+    await press(page, '.color-magic', info);
+    await expect(page.locator('#app')).toHaveAttribute('data-route', 'sticker');
+    await checkLayout(page);
+    await press(page, '.bar-home', info);
+    await expect(page.locator('[data-level=color]')).toHaveAttribute('aria-label', /1 stickers/);
   });
 
   test('grown-up gate needs a 3 second hold and a sum', async ({ page }, info) => {
@@ -226,6 +256,31 @@ test.describe('smoke', () => {
 });
 
 test.describe('touch drag', () => {
+  test('sliding a finger colors every part it crosses', async ({ page, browserName }, info) => {
+    test.skip(!isTouch(info) || browserName !== 'chromium', 'needs Chromium touch emulation');
+    await start(page, info);
+    await press(page, '[data-level=color]', info);
+    await press(page, '[data-swatch=green]', info);
+    const a = (await page.locator('[data-r=armL]').boundingBox())!;
+    const b = (await page.locator('[data-r=armR]').boundingBox())!;
+    const y = a.y + a.height / 2;
+    const cdp = await page.context().newCDPSession(page);
+    const pt = (x: number) => [{ x, y, id: 1, radiusX: 2, radiusY: 2, force: 1 }];
+    const x0 = a.x + 4;
+    const x1 = b.x + b.width - 4;
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: pt(x0) });
+    for (let i = 1; i <= 20; i++) {
+      await cdp.send('Input.dispatchTouchEvent', {
+        type: 'touchMove',
+        touchPoints: pt(x0 + ((x1 - x0) * i) / 20),
+      });
+    }
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+    for (const r of ['armL', 'body', 'armR']) {
+      await expect(page.locator(`[data-r=${r}]`)).toHaveAttribute('fill', '#52b788');
+    }
+  });
+
   test('dragging a card with a finger drops it in the bin', async ({ page, browserName }, info) => {
     test.skip(!isTouch(info) || browserName !== 'chromium', 'needs Chromium touch emulation');
     await start(page, info);

@@ -12,7 +12,7 @@ import { t, type StringKey } from '../core/i18n';
 import { getProgress, resetProgress } from '../core/progress';
 import { h } from './dom';
 
-type NoteLevel = 'teach' | 'program' | 'safety';
+type NoteLevel = 'teach' | 'program' | 'safety' | 'color';
 
 const LEVEL_NOTES: { id: NoteLevel; questions: StringKey[] }[] = [
   {
@@ -24,6 +24,7 @@ const LEVEL_NOTES: { id: NoteLevel; questions: StringKey[] }[] = [
     id: 'safety',
     questions: ['corner.safety.q1', 'corner.safety.q2', 'corner.safety.q3', 'corner.safety.q4'],
   },
+  { id: 'color', questions: ['corner.color.q1', 'corner.color.q2', 'corner.color.q3'] },
 ];
 
 const titleKey = (id: NoteLevel) => `corner.${id}.title` as const;
@@ -80,7 +81,12 @@ export const cornerScreen: Screen = (root, app, scope) => {
   const progressLine = h(
     'p',
     {},
-    t('corner.progressLine', { a: p.stickers.teach, b: p.stickers.program, c: p.stickers.safety }),
+    t('corner.progressLine', {
+      a: p.stickers.teach,
+      b: p.stickers.program,
+      c: p.stickers.safety,
+      d: p.stickers.color,
+    }),
   );
   const reset = h(
     'button',

@@ -1,5 +1,5 @@
 import type { Screen } from '../../app';
-import { say, sfx } from '../../core/audio';
+import { narrate, say, sfx, type Line } from '../../core/audio';
 import { createDnd } from '../../core/drag';
 import { t } from '../../core/i18n';
 import { getProgress, updateProgress } from '../../core/progress';
@@ -22,6 +22,8 @@ export const teachScreen: Screen = (root, app, scope) => {
   const examples: Example[] = [];
   let round = 0;
   let testIndex = 0;
+  /** The first guess explains the tick and cross; later ones just ask. */
+  let explained = false;
 
   // ---- layout ----------------------------------------------------------------
   const makeBin = (label: Label) => {
@@ -174,11 +176,20 @@ export const teachScreen: Screen = (root, app, scope) => {
       pick.textContent = guess.label === 'yes' ? theme.yesIcon : theme.noIcon;
       pick.dataset.label = guess.label;
       bins[guess.label].el.classList.add('is-guess');
-      say(t('l1.guess', { label: labelText(guess.label) }), true);
+      narrate([{ text: t('l1.guess', { label: labelText(guess.label) }), point: pick }, ...ask()]);
+      explained = true;
       yes.disabled = false;
       no.disabled = false;
       phase = 'guess';
     });
+
+    const ask = (): Line[] =>
+      explained
+        ? [{ text: t('l1.rightOrWrong'), point: [yes, no] }]
+        : [
+            { text: t('l1.tapYes'), point: yes },
+            { text: t('l1.tapNo'), point: no },
+          ];
 
     const answer = (childSaysRight: boolean) => {
       if (phase !== 'guess') return;
@@ -187,7 +198,7 @@ export const teachScreen: Screen = (root, app, scope) => {
       if (childSaysRight !== correct) {
         // The child misjudged: no penalty, just look again.
         sfx('oops');
-        say(t('l1.lookAgain'), true);
+        narrate([{ text: t('l1.lookAgain'), point: pick }, ...ask()]);
         return;
       }
       phase = 'busy';
@@ -203,10 +214,10 @@ export const teachScreen: Screen = (root, app, scope) => {
       }
       sfx('oops');
       bolt.flash('oops', 2400);
-      const lines = [t('l1.oops')];
-      if (examples.length < 6) lines.push(t('l1.fewExamples'));
-      lines.push(t('l1.showMe'));
-      say(lines.join(' '), true);
+      const lines: Line[] = [{ text: t('l1.oops') }];
+      if (examples.length < 6) lines.push({ text: t('l1.fewExamples') });
+      lines.push({ text: t('l1.showMe'), point: [bins.yes.el, bins.no.el] });
+      narrate(lines);
       scope.wait(1200, () => {
         tray.replaceChildren(makeCard(item));
         tray.className = 'tray tray-correct';
@@ -225,8 +236,8 @@ export const teachScreen: Screen = (root, app, scope) => {
     }
     round++;
     if (round < theme.rounds.length) {
-      say(t('l1.teachMore'), true);
       startTeach();
+      narrate([{ text: t('l1.teachMore'), point: tray }]);
       return;
     }
     finish();
@@ -252,6 +263,11 @@ export const teachScreen: Screen = (root, app, scope) => {
     );
   }
 
-  say(t(`l1.${theme.id}.intro`), true);
   startTeach();
+  narrate([
+    { text: t(`l1.${theme.id}.intro`) },
+    { text: t(`l1.${theme.id}.yesBox`), point: bins.yes.el },
+    { text: t(`l1.${theme.id}.noBox`), point: bins.no.el },
+    { text: t('l1.moveHint'), point: tray },
+  ]);
 };

@@ -1,6 +1,6 @@
 import { load, remove, save } from './storage';
 
-export type LevelId = 'teach' | 'program' | 'safety';
+export type LevelId = 'teach' | 'program' | 'safety' | 'color';
 
 export interface Progress {
   stickers: Record<LevelId, number>;
@@ -8,6 +8,8 @@ export interface Progress {
   teachPlays: number;
   /** Index of the next Program puzzle, so a return trip resumes. */
   programPuzzle: number;
+  /** Next coloring page. */
+  colorPage: number;
 }
 
 export interface Settings {
@@ -17,9 +19,10 @@ export interface Settings {
 }
 
 const fresh = (): Progress => ({
-  stickers: { teach: 0, program: 0, safety: 0 },
+  stickers: { teach: 0, program: 0, safety: 0, color: 0 },
   teachPlays: 0,
   programPuzzle: 0,
+  colorPage: 0,
 });
 
 export function getProgress(): Progress {
@@ -29,6 +32,7 @@ export function getProgress(): Progress {
     stickers: { ...base.stickers, ...(p.stickers ?? {}) },
     teachPlays: typeof p.teachPlays === 'number' ? p.teachPlays : 0,
     programPuzzle: typeof p.programPuzzle === 'number' ? p.programPuzzle : 0,
+    colorPage: typeof p.colorPage === 'number' ? p.colorPage : 0,
   };
 }
 

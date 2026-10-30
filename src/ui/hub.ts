@@ -1,16 +1,17 @@
 import type { Screen } from '../app';
-import { say, sfx } from '../core/audio';
-import { t } from '../core/i18n';
+import { narrate, sfx } from '../core/audio';
+import { t, type StringKey } from '../core/i18n';
 import { getProgress, type LevelId } from '../core/progress';
 import { createBolt } from './bolt';
 import { h } from './dom';
 import { createShell } from './shell';
 import { STICKER_ICON } from './sticker';
 
-const LEVELS: { id: LevelId; icon: string; label: 'hub.teach' | 'hub.program' | 'hub.safety' }[] = [
-  { id: 'teach', icon: '🍎', label: 'hub.teach' },
-  { id: 'program', icon: '🔋', label: 'hub.program' },
-  { id: 'safety', icon: '🛡️', label: 'hub.safety' },
+const LEVELS: { id: LevelId; icon: string; label: StringKey; say: StringKey }[] = [
+  { id: 'teach', icon: '🍎', label: 'hub.teach', say: 'hub.teach.say' },
+  { id: 'program', icon: '🔋', label: 'hub.program', say: 'hub.program.say' },
+  { id: 'safety', icon: '🛡️', label: 'hub.safety', say: 'hub.safety.say' },
+  { id: 'color', icon: '🖍️', label: 'hub.color', say: 'hub.color.say' },
 ];
 
 export const hubScreen: Screen = (root, app, scope) => {
@@ -20,7 +21,7 @@ export const hubScreen: Screen = (root, app, scope) => {
   const progress = getProgress();
 
   const levels = h('div', { class: 'hub-levels' });
-  LEVELS.forEach((lvl, i) => {
+  const buttons = LEVELS.map((lvl, i) => {
     const n = progress.stickers[lvl.id];
     const stars = h(
       'span',
@@ -45,9 +46,16 @@ export const hubScreen: Screen = (root, app, scope) => {
       app.go({ name: lvl.id });
     });
     levels.append(btn);
+    return btn;
   });
 
   shell.el.append(h('div', { class: 'hub-hero' }, bolt.el, shell.caption), levels);
-  scope.wait(400, () => say(t('hub.intro'), true));
+  // Bolt introduces each game while pointing at its button, so no reading is needed.
+  scope.wait(400, () =>
+    narrate([
+      { text: t('hub.intro') },
+      ...LEVELS.map((lvl, i) => ({ text: t(lvl.say), point: buttons[i] })),
+    ]),
+  );
   scope.wait(500, () => bolt.flash('happy'));
 };

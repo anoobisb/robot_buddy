@@ -8,7 +8,9 @@ The child teaches, programs and protects **Bolt**, a friendly robot, and picks u
 3. **Computers follow steps** – order matters, and you can fix a bug.
 4. **Be safe online** – don't share personal things; ask a grown-up.
 
-Everything is spoken and shown with pictures, so reading is never needed. There are no accounts,
+Everything is spoken and shown with pictures, so reading is never needed. While Bolt talks about
+a button, that button glows and a 👆 finger bounces on it, so a child who can't read "Ask a
+grown-up" still knows which button the words mean. The 🔊 button says it all again. There are no accounts,
 ads, analytics or network requests after the first load, and it works offline as an installed app.
 
 **Play:** https://robot-buddy-five.vercel.app/
@@ -19,7 +21,8 @@ ads, analytics or network requests after the first load, and it works offline as
 | --- | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 1   | **Teach Bolt**      | Sort pictures into two boxes. Each one is a labelled example for a real k-nearest-neighbours classifier. Bolt then guesses new pictures; the child taps ✅ or ❌ and shows Bolt where wrong ones go. Bolt gets tricky items (coconut, teddy, bat…) wrong early and everything right by round 3. A new theme (fruit, animals vs toys, things that fly) unlocks on each replay. |
 | 2   | **Program Bolt**    | Tap or drag arrows into a row of up to 8 steps, press ▶️ and watch Bolt walk to the battery. If it bumps into something, the step with the bug lights up 🐞; tap it to remove it and pick a new arrow. 8 puzzles on 4×4 and 5×5 boards, including two "fix the broken program" puzzles and a final loop puzzle where the 🔁 tile repeats the steps before it.                 |
-| 3   | **Bolt's Safe Net** | Five calm cartoon scenes (a prize pop-up, a stranger in a game, a photo request, a confusing screen, a password). Pick the safe choice; Bolt says the rule: "If you're not sure, ask a grown-up!"                                                                                                                                                                             |
+| 3   | **Bolt's Safe Net** | Five calm cartoon scenes (a prize pop-up, a stranger in a game, a photo request, a confusing screen, a password). Pick the safe choice; Bolt says the rule: "If you're not sure, ask a grown-up!" First Bolt teaches one picture, 👩‍👧 = "a grown-up", which marks every grown-up answer. Bolt reads out each answer while pointing at it.                                      |
+| 4   | **Color Bolt**      | Three robot coloring pages for fingers: tap a color (Bolt names it), then tap or slide across the picture to fill parts. The ✨ button lets Bolt finish the picture using the colors the child used most: a small "computers learn what you like from what you do" moment.                                                                                                    |
 
 Each game ends with a sticker. There are no timers, no scores to lose and no buzzers: a wrong
 answer just gets a gentle "let's try again".
