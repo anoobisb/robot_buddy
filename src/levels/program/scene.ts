@@ -6,18 +6,26 @@ import { getProgress, updateProgress } from '../../core/progress';
 import { createBolt } from '../../ui/bolt';
 import { h, iconButton } from '../../ui/dom';
 import { createShell } from '../../ui/shell';
-import { run, type Dir, type Pos } from './interpreter';
+import { expand, run, type Cmd, type Dir, type Pos } from './interpreter';
 import { MAX_SLOTS, PUZZLES, STICKER_AFTER } from './puzzles';
 
-const ARROW: Record<Dir, string> = { up: '⬆️', down: '⬇️', left: '⬅️', right: '➡️' };
+const ARROW: Record<Cmd, string> = {
+  up: '⬆️',
+  down: '⬇️',
+  left: '⬅️',
+  right: '➡️',
+  repeat: '🔁',
+};
 const DIRS: Dir[] = ['up', 'down', 'left', 'right'];
+const TILES: Cmd[] = [...DIRS, 'repeat'];
 const STEP_MS = 520;
 
 export function programScreen(startAt?: number): Screen {
   return (root, app, scope) => {
     const shell = createShell(root, app, scope, 'program');
     let index = (startAt ?? getProgress().programPuzzle) % PUZZLES.length;
-    let slots: (Dir | null)[] = [];
+    let slots: (Cmd | null)[] = [];
+    let slotCount = MAX_SLOTS;
     let running = false;
 
     // ---- board ------------------------------------------------------------------
@@ -54,15 +62,17 @@ export function programScreen(startAt?: number): Screen {
           'aria-label',
           d ? `${t('l2.slot', { n: i + 1 })}: ${t(`l2.${d}`)}` : t('l2.slotEmpty', { n: i + 1 }),
         );
+        el.hidden = i >= slotCount;
+        el.setAttribute('aria-hidden', String(i >= slotCount));
       });
     };
     const clearMarks = () =>
       slotEls.forEach((el) => el.classList.remove('is-active', 'is-bug', 'is-done'));
 
-    const addStep = (d: Dir, at?: number) => {
+    const addStep = (d: Cmd, at?: number) => {
       if (running) return;
-      const i = at ?? slots.findIndex((s) => s === null);
-      if (i < 0) {
+      const i = at ?? slots.findIndex((s, n) => s === null && n < slotCount);
+      if (i < 0 || i >= slotCount) {
         sfx('oops');
         say(t('l2.full'));
         return;
@@ -82,14 +92,16 @@ export function programScreen(startAt?: number): Screen {
     const dnd = createDnd({
       tapSelect: false,
       onPick: () => sfx('pick'),
-      onDrop: (id, zone) => addStep(id as Dir, Number(zone)),
+      onDrop: (id, zone) => addStep(id as Cmd, Number(zone)),
     });
     scope.add(dnd.destroy);
     slotEls.forEach((el, i) => dnd.addZone(el, String(i)));
 
     const palette = h('div', { class: 'palette' });
-    for (const d of DIRS) {
+    const tiles = new Map<Cmd, HTMLButtonElement>();
+    for (const d of TILES) {
       const b = iconButton(ARROW[d], t(`l2.${d}`), `arrow arrow-${d}`);
+      tiles.set(d, b);
       b.dataset.dir = d;
       dnd.addItem(b, d);
       scope.on(b, 'click', () => {
@@ -145,6 +157,10 @@ export function programScreen(startAt?: number): Screen {
         }
       }
       board.replaceChildren(...cells, bolt.el);
+      const offered = new Set<Cmd>(p.palette ?? DIRS);
+      if (p.repeat) offered.add('repeat');
+      tiles.forEach((b, d) => (b.hidden = !offered.has(d)));
+      slotCount = p.slots ?? MAX_SLOTS;
       board.setAttribute('aria-label', `${index + 1} / ${PUZZLES.length}`);
       bolt.set('idle');
       place(p.start);
@@ -161,14 +177,17 @@ export function programScreen(startAt?: number): Screen {
     function go(): void {
       if (running) return;
       const p = PUZZLES[index]!;
+      // Empty slots are skipped; map[k] is the slot of the k-th tile.
       const map: number[] = [];
-      const program: Dir[] = [];
+      const cmds: Cmd[] = [];
       slots.forEach((d, i) => {
-        if (d) {
+        if (d && i < slotCount) {
           map.push(i);
-          program.push(d);
+          cmds.push(d);
         }
       });
+      const { steps: program, from } = expand(cmds);
+      const slotOf = from.map((k) => map[k]!);
       if (!program.length) {
         sfx('oops');
         say(t('l2.empty'), true);
@@ -185,15 +204,15 @@ export function programScreen(startAt?: number): Screen {
       moves.forEach((pos, i) => {
         scope.wait(STEP_MS * (i + 1), () => {
           slotEls.forEach((el) => el.classList.remove('is-active'));
-          slotEls[map[i]!]!.classList.add('is-active', 'is-done');
+          slotEls[slotOf[i]!]!.classList.add('is-active', 'is-done');
           sfx('step');
           place(pos);
         });
       });
-      scope.wait(STEP_MS * (moves.length + 1), () => finish(r.result, r.failedStep, map));
+      scope.wait(STEP_MS * (moves.length + 1), () => finish(r.result, r.failedStep, slotOf, map));
     }
 
-    function finish(result: string, failed: number | null, map: number[]): void {
+    function finish(result: string, failed: number | null, slotOf: number[], map: number[]): void {
       slotEls.forEach((el) => el.classList.remove('is-active'));
       if (result === 'reached_goal') {
         sfx('win');
@@ -217,7 +236,7 @@ export function programScreen(startAt?: number): Screen {
           }
           index = next;
           load();
-          say(PUZZLES[index]!.kind === 'fix' ? t('l2.fixIntro') : t('l2.next'), true);
+          say(introFor(index, t('l2.next')), true);
         });
         return;
       }
@@ -226,8 +245,8 @@ export function programScreen(startAt?: number): Screen {
       bolt.set('oops');
       const bugSlot =
         result === 'hit_wall'
-          ? map[failed ?? 0]
-          : (slots.findIndex((s, i) => s === null && i > (map.at(-1) ?? -1)) as number);
+          ? slotOf[failed ?? 0]
+          : slots.findIndex((s, i) => s === null && i < slotCount && i > (map.at(-1) ?? -1));
       if (bugSlot !== undefined && bugSlot >= 0) slotEls[bugSlot]?.classList.add('is-bug');
       say(result === 'hit_wall' ? t('l2.bug') : t('l2.more'), true);
       scope.wait(1800, () => {
@@ -237,7 +256,13 @@ export function programScreen(startAt?: number): Screen {
       });
     }
 
+    function introFor(i: number, fallback: string): string {
+      const p = PUZZLES[i]!;
+      if (p.kind === 'fix') return t('l2.fixIntro');
+      return p.repeat ? t('l2.repeatIntro') : fallback;
+    }
+
     load();
-    say(PUZZLES[index]!.kind === 'fix' ? t('l2.fixIntro') : t('l2.intro'), true);
+    say(introFor(index, t('l2.intro')), true);
   };
 }

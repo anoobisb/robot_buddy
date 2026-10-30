@@ -1,6 +1,8 @@
 // Pure interpreter for Bolt's grid programs.
 
 export type Dir = 'up' | 'down' | 'left' | 'right';
+/** A tile in the program row: a step, or a 🔁 that repeats the steps before it. */
+export type Cmd = Dir | 'repeat';
 
 export interface Pos {
   x: number;
@@ -51,4 +53,28 @@ export function run(grid: Grid, program: readonly Dir[]): RunResult {
     if (same(pos, grid.goal)) return { states, result: 'reached_goal', failedStep: null };
   }
   return { states, result: 'ran_out', failedStep: program.length };
+}
+
+/**
+ * Unrolls 🔁 tiles: each one does every step since the previous 🔁 (or the start)
+ * one more time. `from` maps each step back to the tile that produced it.
+ */
+export function expand(cmds: readonly Cmd[]): { steps: Dir[]; from: number[] } {
+  const steps: Dir[] = [];
+  const from: number[] = [];
+  let segment = 0;
+  cmds.forEach((c, i) => {
+    if (c === 'repeat') {
+      const end = steps.length;
+      for (let j = segment; j < end; j++) {
+        steps.push(steps[j]!);
+        from.push(from[j]!);
+      }
+      segment = steps.length;
+    } else {
+      steps.push(c);
+      from.push(i);
+    }
+  });
+  return { steps, from };
 }

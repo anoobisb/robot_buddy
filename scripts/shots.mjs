@@ -38,10 +38,14 @@ await page.locator('[data-bin=no]').tap();
 await page.locator('.answer-yes:not([disabled])').waitFor();
 await shot('teach-guess');
 await page.locator('.bar-home').tap();
+await page.evaluate(
+  'localStorage.setItem("robot-buddy:progress", JSON.stringify({programPuzzle: 7}))',
+);
 await page.locator('[data-level=program]').tap();
 await page.waitForTimeout(300);
 await page.locator('.arrow-right').tap();
 await page.locator('.arrow-down').tap();
+await page.locator('.arrow-repeat').tap();
 await shot('program');
 await page.locator('.bar-home').tap();
 await page.locator('[data-level=safety]').tap();

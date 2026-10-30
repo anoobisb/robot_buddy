@@ -2,7 +2,7 @@ import { expect, test, type Page, type TestInfo } from '@playwright/test';
 import { DELTA, run, type Dir } from '../../src/levels/program/interpreter';
 import { PUZZLES } from '../../src/levels/program/puzzles';
 import { THEMES, itemById } from '../../src/levels/teach/items';
-import { solve } from '../shared/solve';
+import { solveTiles } from '../shared/solve';
 import { checkLayout, isTouch, press, rotate, start, watchErrors } from './helpers';
 
 const route = (page: Page) => page.locator('#app').getAttribute('data-route');
@@ -58,6 +58,7 @@ async function playProgram(page: Page, info: TestInfo): Promise<void> {
       `${i + 1} / ${PUZZLES.length}`,
     );
     await waitIdle(page);
+    if (p.repeat) await checkLayout(page);
     if (p.kind === 'fix') {
       await press(page, '.run-btn', info);
       const bug = page.locator('.slot.is-bug');
@@ -74,7 +75,7 @@ async function playProgram(page: Page, info: TestInfo): Promise<void> {
       await press(page, `.arrow-${fix}`, info);
     } else {
       await press(page, '.clear-btn', info);
-      for (const d of solve(p)!) await press(page, `.arrow-${d}`, info);
+      for (const c of solveTiles(p)!) await press(page, `.arrow-${c}`, info);
     }
     await press(page, '.run-btn', info);
     if (i === 3) {

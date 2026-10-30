@@ -1,11 +1,17 @@
-import type { Dir, Grid } from './interpreter';
+import type { Cmd, Dir, Grid } from './interpreter';
 
 export const MAX_SLOTS = 8;
 
 export interface Puzzle extends Grid {
   /** 'fix' puzzles start with a pre-filled program containing one bad step. */
   kind: 'build' | 'fix';
-  program?: readonly Dir[];
+  program?: readonly Cmd[];
+  /** Arrows offered (default: all four). */
+  palette?: readonly Dir[];
+  /** Offers the 🔁 tile. */
+  repeat?: boolean;
+  /** Program row length (default MAX_SLOTS). */
+  slots?: number;
 }
 
 export const PUZZLES: readonly Puzzle[] = [
@@ -49,16 +55,19 @@ export const PUZZLES: readonly Puzzle[] = [
     ],
     program: ['up', 'right', 'right', 'right', 'right'],
   },
-  // 8. Around a wall
+  // 8. Repeat: eight steps of walking, but only five tiles, so the 🔁 tile is needed.
   {
     kind: 'build',
     size: 5,
-    start: { x: 0, y: 2 },
-    goal: { x: 4, y: 2 },
+    start: { x: 0, y: 0 },
+    goal: { x: 4, y: 4 },
     walls: [
-      { x: 2, y: 1 },
-      { x: 2, y: 2 },
+      { x: 3, y: 0 },
+      { x: 0, y: 3 },
     ],
+    palette: ['right', 'down'],
+    repeat: true,
+    slots: 5,
   },
 ];
 

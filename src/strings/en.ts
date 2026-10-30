@@ -71,7 +71,7 @@ export const en = {
   'l2.right': 'Right',
   'l2.repeat': 'Repeat two times',
   'l2.repeatIntro':
-    'This arrow box does its steps two times! Put arrows in the repeat box, then press play.',
+    'This is the loop tile! It does all the steps before it one more time. Can you get Bolt to the battery with only five tiles?',
   'l2.run': 'Play',
   'l2.clear': 'Clear all',
   'l2.slot': 'Step {n}',

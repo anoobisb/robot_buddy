@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { DELTA, isBlocked, run, type Dir, type Grid } from '../../src/levels/program/interpreter';
-import { solve } from '../shared/solve';
+import {
+  DELTA,
+  expand,
+  isBlocked,
+  run,
+  type Dir,
+  type Grid,
+} from '../../src/levels/program/interpreter';
+import { solve, solveTiles } from '../shared/solve';
 import { MAX_SLOTS, PUZZLES, STICKER_AFTER } from '../../src/levels/program/puzzles';
 
 const open: Grid = {
@@ -48,6 +55,24 @@ describe('interpreter', () => {
   });
 });
 
+describe('expand', () => {
+  it('repeats the steps before a 🔁 tile once more', () => {
+    expect(expand(['right', 'down', 'repeat'])).toEqual({
+      steps: ['right', 'down', 'right', 'down'],
+      from: [0, 1, 0, 1],
+    });
+  });
+
+  it('repeats only the steps since the previous 🔁', () => {
+    expect(expand(['up', 'repeat', 'left', 'repeat']).steps).toEqual(['up', 'up', 'left', 'left']);
+  });
+
+  it('leaves programs without 🔁 alone, and ignores a leading 🔁', () => {
+    expect(expand(['up', 'left']).steps).toEqual(['up', 'left']);
+    expect(expand(['repeat', 'up']).steps).toEqual(['up']);
+  });
+});
+
 describe('puzzles', () => {
   it('has 8 puzzles with stickers after 4 and 8', () => {
     expect(PUZZLES).toHaveLength(8);
@@ -64,10 +89,10 @@ describe('puzzles', () => {
     (_n, p) => {
       expect(isBlocked(p, p.start)).toBe(false);
       expect(isBlocked(p, p.goal)).toBe(false);
-      const path = solve(p);
-      expect(path).not.toBeNull();
-      expect(path!.length).toBeLessThanOrEqual(MAX_SLOTS);
-      expect(run(p, path!).result).toBe('reached_goal');
+      const tiles = solveTiles(p);
+      expect(tiles).not.toBeNull();
+      expect(tiles!.length).toBeLessThanOrEqual(p.slots ?? MAX_SLOTS);
+      expect(run(p, expand(tiles!).steps).result).toBe('reached_goal');
     },
   );
 
@@ -78,6 +103,16 @@ describe('puzzles', () => {
     expect(PUZZLES[3]!.walls.length).toBeGreaterThan(0);
   });
 
+  it('ends with a repeat puzzle that needs the 🔁 tile', () => {
+    const p = PUZZLES.at(-1)!;
+    expect(p.repeat).toBe(true);
+    expect(solve(p)!.length).toBeGreaterThan(p.slots!);
+    expect(solveTiles(p)).toContain('repeat');
+    expect(run(p, expand(['right', 'down', 'right', 'down', 'repeat']).steps).result).toBe(
+      'reached_goal',
+    );
+  });
+
   it('has exactly two fix-the-program puzzles', () => {
     expect(PUZZLES.filter((p) => p.kind === 'fix')).toHaveLength(2);
   });
@@ -85,7 +120,7 @@ describe('puzzles', () => {
   it.each(PUZZLES.flatMap((p, i) => (p.kind === 'fix' ? [[i + 1, p] as const] : [])))(
     'fix puzzle %i: the bug shows at the bad step, and replacing it fixes the program',
     (_n, p) => {
-      const program = p.program!;
+      const program = expand(p.program!).steps;
       const r = run(p, program);
       expect(r.result).toBe('hit_wall');
       const bad = r.failedStep!;
