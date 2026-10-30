@@ -137,7 +137,7 @@ export const en = {
     'No accounts, no ads, no tracking. Nothing leaves this device. Progress is saved only in this browser.',
   'corner.credits': 'Credits and licences',
   'corner.creditsText':
-    'Robot Buddy is free and open source. Bolt, the sounds and all pictures are made in code for this game. Emoji are drawn by your device’s own font. Source code: github.com (see README).',
+    'Robot Buddy is free, with no ads and no tracking. Bolt, the sounds and all pictures are made in code for this game. Emoji are drawn by your device’s own font. Voices come from your device.',
   'corner.done': 'Back to the game',
 
   'corner.teach.title': 'Teach Bolt',

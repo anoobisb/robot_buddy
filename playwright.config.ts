@@ -13,6 +13,8 @@ export const VIEWPORTS = [
 ];
 
 const PORT = 4173;
+// Must match the Vite base in vite.config.ts.
+const repo = process.env.GITHUB_REPOSITORY?.split('/')[1] ?? 'robot_buddy';
 
 export default defineConfig({
   testDir: 'tests/e2e',
@@ -21,13 +23,13 @@ export default defineConfig({
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? 'github' : 'list',
   use: {
-    baseURL: `http://localhost:${PORT}/robot_buddy/`,
+    baseURL: `http://localhost:${PORT}/${repo}/`,
     reducedMotion: 'reduce',
     trace: 'retain-on-failure',
   },
   webServer: {
     command: `npm run build && npx vite preview --port ${PORT} --strictPort`,
-    url: `http://localhost:${PORT}/robot_buddy/`,
+    url: `http://localhost:${PORT}/${repo}/`,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
   },

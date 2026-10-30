@@ -37,7 +37,9 @@ body {
   height: 100%;
   overflow: hidden;
   overscroll-behavior: none;
-  touch-action: manipulation;
+  /* No pinch or double-tap zoom anywhere. (Zoom is blocked here and in main.ts rather
+     than with user-scalable=no, which iOS ignores and which fails accessibility audits.) */
+  touch-action: pan-x pan-y;
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
