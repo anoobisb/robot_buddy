@@ -11,7 +11,7 @@ The child teaches, programs and protects **Bolt**, a friendly robot, and picks u
 Everything is spoken and shown with pictures, so reading is never needed. There are no accounts,
 ads, analytics or network requests after the first load, and it works offline as an installed app.
 
-**Play:** `https://<your-github-username>.github.io/robot_buddy/` (after the first deploy; see below).
+**Play:** https://robot-buddy-five.vercel.app/
 
 ## The games
 
@@ -66,9 +66,18 @@ game survives blocked `localStorage` and missing `speechSynthesis`.
 The Vite `base` and the manifest's `scope`/`start_url` come from the repository name
 (`GITHUB_REPOSITORY`), so a fork with a different name still works.
 
+## Deploy to Vercel (free, current host)
+
+`vercel.json` builds with `BASE_PATH=/`, so the game is served from the site root.
+
+```sh
+npx vercel login          # once
+npx vercel deploy --prod  # builds on Vercel and publishes
+```
+
 ## Install on a tablet or phone
 
-Open the Pages URL once while online, then:
+Open the game's URL once while online, then:
 
 - **iPad / iPhone (Safari):** tap **Share** → **Add to Home Screen**.
 - **Android (Chrome):** tap **⋮** → **Install app** (or **Add to Home screen**).

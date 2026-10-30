@@ -2,9 +2,10 @@ import { defineConfig } from 'vitest/config';
 import { VitePWA } from 'vite-plugin-pwa';
 
 // GitHub Pages serves the site at /<repo>/. In Actions the repo name comes from
-// GITHUB_REPOSITORY; locally we default to this repo's name.
+// GITHUB_REPOSITORY; locally we default to this repo's name. BASE_PATH overrides it
+// (e.g. BASE_PATH=/ for hosts like Vercel that serve the site at the root).
 const repo = process.env.GITHUB_REPOSITORY?.split('/')[1] ?? 'robot_buddy';
-const base = `/${repo}/`;
+const base = process.env.BASE_PATH ?? `/${repo}/`;
 
 export default defineConfig({
   base,
